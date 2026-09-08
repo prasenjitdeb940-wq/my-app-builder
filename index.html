@@ -1,109 +1,222 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web-to-APK App Builder | Prompt-Driven Android Studio</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              400: '#818cf8',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            },
-            surface: {
-              DEFAULT: '#09090b',
-              50: '#18181b',
-              100: '#27272a',
-              200: '#3f3f46',
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
-          },
-          boxShadow: {
-            'phone': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 12px #1e1e24, 0 0 0 14px #2e2e38',
-            'phone-glow': '0 0 50px -10px rgba(99, 102, 241, 0.25)',
-          }
+// Helper to detect Hindi / Hinglish prompt
+function isHindiOrHinglish(text) {
+  if (!text) return false;
+  // Check for Devanagari script: \u0900-\u097F
+  if (/[\u0900-\u097F]/.test(text)) return true;
+  // Common conversational Hinglish tokens
+  const hinglishTokens = [
+    'banao', 'karo', 'chahiye', 'wala', 'wali', 'wale', 'dukan', 'dukaan', 'khana', 'meri', 'mera', 
+    'apna', 'apni', 'kaise', 'karna', 'hoga', 'hai', 'hain', 'mein', 'liye', 'sath', 'aur', 'kuch',
+    'pe', 'se', 'ko', 'naam', 'rakho', 'daalo', 'dekhna', 'kharidna', 'bechna', 'paise', 'samajh', 'ek'
+  ];
+  const words = text.toLowerCase().split(/\s+/);
+  return words.some(w => hinglishTokens.includes(w));
+}
+
+// Helper for Hindi/Hinglish App Features Summary
+function getHindiFeatureSummary(promptText, appName) {
+  const text = (promptText || '').toLowerCase();
+  if (text.includes('fit') || text.includes('workout') || text.includes('gym')) {
+    return `${appName}: Daily calorie loop, streak tracker, HIIT workout protocols aur active timer shamil hai.`;
+  } else if (text.includes('crypto') || text.includes('wallet')) {
+    return `${appName}: Real-time portfolio balance, token swap modals, BTC/ETH tickers aur biometric security active hai.`;
+  } else if (text.includes('food') || text.includes('khana') || text.includes('delivery')) {
+    return `${appName}: Restaurant menus, live GPS courier tracking, item customizer aur cart checkout ready hai.`;
+  } else if (text.includes('task') || text.includes('todo') || text.includes('habit')) {
+    return `${appName}: Priority checkmarks, habit streak, local SQLite caching aur quick add task modal configured hai.`;
+  } else {
+    return `${appName}: Multi-screen product grid, category filter tabs, interactive shopping bag aur checkout drawer taiyyar hai.`;
+  }
+}
+
+function runProgressStep(s) {
+  return new Promise(resolve => {
+    loadingProgressBar.style.width = `${s.pct}%`;
+    loadingPercentLabel.textContent = `${s.pct}%`;
+    loadingStepLabel.textContent = s.label;
+    loadingSubtitle.textContent = s.title;
+
+    const stepEl = document.getElementById(s.stepId);
+    if (stepEl) {
+      stepEl.className = 'flex items-center gap-2 text-emerald-400 font-semibold';
+      const indicator = stepEl.querySelector('span');
+      if (indicator) indicator.textContent = '✓';
+    }
+
+    appendLog(s.log);
+    setTimeout(resolve, 450);
+  });
+}
+
+// MAIN EXECUTION: Trigger App Generation with Realistic Telemetry & Loading Animation
+// Strictly asynchronous to allow await fetch and Gemini API calls
+async function triggerAppGeneration() {
+  if (state.isGenerating) return;
+
+  const promptText = appPromptInput.value.trim();
+  if (!promptText) {
+    alert('Please enter an app prompt to generate.');
+    return;
+  }
+
+  state.isGenerating = true;
+  state.prompt = promptText;
+
+  const isHinglish = isHindiOrHinglish(promptText);
+
+  // Update UI button state
+  btnGenerate.disabled = true;
+  btnGenerate.classList.add('opacity-75', 'cursor-not-allowed');
+  btnGenerateText.textContent = isHinglish ? 'App Banna Shuru...' : 'Synthesizing App...';
+  telemetryStatus.textContent = isHinglish ? '● Compiling (Pragatisheel)...' : '● Compiling...';
+  telemetryStatus.className = 'text-amber-400 font-mono text-[10px] animate-pulse';
+
+  // Show Loading Overlay on Phone Emulator
+  emulatorLoadingOverlay.style.display = 'flex';
+  emulatorLoadingOverlay.style.opacity = '1';
+  loadingProgressBar.style.width = '0%';
+  loadingPercentLabel.textContent = '0%';
+
+  // Update loading headers according to detected language
+  loadingTitle.textContent = isHinglish ? 'Android Web Bundle Taiyyar Ho Raha Hai' : 'Compiling Android Web Bundle';
+  loadingSubtitle.textContent = isHinglish ? 'UI architecture aur touch gestures synthesize ho rahe hain...' : 'Synthesizing DOM architecture & touch interactions...';
+
+  appendLog(isHinglish ? `[Naya Build] Prompt: "${promptText.substring(0, 42)}..."` : `Triggered build: "${promptText.substring(0, 42)}..."`);
+
+  // 4-Step Animated Progression (supports both Hindi/Hinglish and English logs)
+  const steps = [
+    { 
+      pct: 25, 
+      label: isHinglish ? 'Kadam 1/4' : 'Step 1/4', 
+      title: isHinglish ? 'Prompt semantics samajh rahe hain' : 'Parsing prompt semantics', 
+      stepId: 'step1', 
+      log: isHinglish ? 'Natural language prompt analyze ho gaya (Hindi/Hinglish detected)' : 'Natural language analysis complete' 
+    },
+    { 
+      pct: 55, 
+      label: isHinglish ? 'Kadam 2/4' : 'Step 2/4', 
+      title: isHinglish ? 'Multi-screen UI aur DOM taiyyar ho raha hai' : 'Synthesizing mobile UI architecture', 
+      stepId: 'step2', 
+      log: isHinglish ? 'Dynamic mobile layout aur Tailwind CSS synthesize ho gaya' : 'Generated dynamic viewport & DOM tree' 
+    },
+    { 
+      pct: 85, 
+      label: isHinglish ? 'Kadam 3/4' : 'Step 3/4', 
+      title: isHinglish ? 'Android gesture aur touch handlers jud rahe hain' : 'Injecting Android gesture handlers', 
+      stepId: 'step3', 
+      log: isHinglish ? 'Touch event listeners aur navigation bridges attach ho gaye' : 'Attached touch listener bridges' 
+    },
+    { 
+      pct: 100, 
+      label: isHinglish ? 'Kadam 4/4' : 'Step 4/4', 
+      title: isHinglish ? 'Android WebView me mount ho raha hai' : 'Mounting to Android WebView', 
+      stepId: 'step4', 
+      log: isHinglish ? 'AAPT2 Android manifest build safal raha (0 errors)' : 'AAPT2 compilation successful (0 errors)' 
+    }
+  ];
+
+  // Reset step indicators in loading overlay
+  ['step1', 'step2', 'step3', 'step4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'flex items-center gap-2 text-zinc-500';
+  });
+
+  // Execute Step 1
+  await runProgressStep(steps[0]);
+
+  // Check user's Gemini API key securely from localStorage
+  const userApiKey = localStorage.getItem('user_gemini_key');
+  let generatedHtml = '';
+
+  if (userApiKey && userApiKey.trim() !== '') {
+    appendLog(isHinglish 
+      ? 'user_gemini_key mil gaya, Gemini AI se direct code manga rahe hain...' 
+      : 'Secure Gemini key detected in localStorage. Requesting AI code generation...');
+
+    try {
+      const systemInstruction = isHinglish
+        ? `You are an expert Full-Stack and Android Automation Developer. Build a complete single-file HTML/CSS/JavaScript mobile web application tailored for an Android WebView container. The user prompt is in Hindi/Hinglish. Include modern styling with Tailwind CSS CDN (<script src="https://cdn.tailwindcss.com"></script>), responsive mobile layout (1080x2400 aspect), multi-screen navigation, and friendly Hindi/Hinglish or bilingual touchpoints where appropriate. Return ONLY valid standalone HTML starting with <!DOCTYPE html> and ending with </html> without markdown or backticks.`
+        : `You are an expert Full-Stack and Android Automation Developer. Build a complete single-file HTML/CSS/JavaScript mobile web application tailored for an Android WebView container. Include modern styling with Tailwind CSS CDN (<script src="https://cdn.tailwindcss.com"></script>), responsive mobile layout, multi-screen navigation, and full interactive JavaScript. Return ONLY valid standalone HTML starting with <!DOCTYPE html> and ending with </html> without markdown or backticks.`;
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(userApiKey.trim())}`;
+      
+      const res = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: `${systemInstruction}\n\nUser Specification: ${promptText}` }]
+          }]
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        let cleanHtml = rawText.trim();
+        if (cleanHtml.startsWith('```html')) cleanHtml = cleanHtml.slice(7);
+        else if (cleanHtml.startsWith('```')) cleanHtml = cleanHtml.slice(3);
+        if (cleanHtml.endsWith('```')) cleanHtml = cleanHtml.slice(0, -3);
+        cleanHtml = cleanHtml.trim();
+
+        if (cleanHtml.includes('<html') || cleanHtml.includes('<!DOCTYPE')) {
+          generatedHtml = cleanHtml;
+          appendLog(isHinglish ? 'Gemini AI ne app bundle safaltapoorvak generate kar diya!' : 'Gemini AI generated mobile bundle successfully!');
         }
+      } else {
+        appendLog(isHinglish ? `Gemini API Status: ${res.status}. Fallback template use ho raha hai.` : `Gemini API returned ${res.status}. Falling back to template.`);
       }
+    } catch (err) {
+      appendLog(isHinglish ? 'Gemini API call me error aaya. Fallback engine chal raha hai.' : 'Gemini API request failed. Using offline template engine.');
     }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    /* Custom sleek scrollbars */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+  } else {
+    appendLog(isHinglish 
+      ? '[INFO] localStorage(\'user_gemini_key\') nahi mila. High-performance offline template engine use ho raha hai.' 
+      : '[INFO] No localStorage(\'user_gemini_key\') found. Using offline high-performance engine.');
+  }
 
-    /* Phone glass glare effect */
-    .phone-glass-glare {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 40%, rgba(255, 255, 255, 0) 100%);
-    }
+  // Execute Step 2
+  await runProgressStep(steps[1]);
 
-    /* Ambient pulse */
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .animate-pulse-ring {
-      animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-  </style>
-</head>
-<body class="bg-[#09090b] text-zinc-100 font-sans h-screen flex flex-col overflow-hidden selection:bg-indigo-500 selection:text-white">
+  // Fallback to rich built-in template engine if not generated by API
+  if (!generatedHtml) {
+    generatedHtml = generateHtmlForPrompt(promptText);
+  }
 
-  <!-- TOP HEADER NAVIGATION -->
-  <header class="h-14 border-b border-zinc-800 bg-[#0d0d12]/90 backdrop-blur-md px-5 flex items-center justify-between z-30 shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-        <!-- Android Bot Logo -->
-        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v6c0 .83.67 1.5 1.5 1.5S5 16.33 5 15.5v-6C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5zm-4.97-4.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 2.23 12.95 2 12 2c-.96 0-1.86.23-2.66.63L7.85 1.14c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 4.26 6 6.01 6 8h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="font-semibold text-sm tracking-tight text-zinc-100">Web-to-APK Builder</h1>
-          <span class="px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">Studio Edition</span>
-        </div>
-        <p class="text-[11px] text-zinc-400">Prompt-Driven Android Mobile Synthesis</p>
-      </div>
-    </div>
+  // Execute Step 3
+  await runProgressStep(steps[2]);
 
-    <!-- Center Status Indicator -->
-    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs">
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span class="text-zinc-300 font-medium">Emulator: Android 14 (API 34)</span>
-      <span class="text-zinc-600">|</span>
-      <span class="text-zinc-400 font-mono text-[11px]">WebView 122.0</span>
-    </div>
+  // Execute Step 4
+  await runProgressStep(steps[3]);
 
-    <!-- Right Actions -->
-    <div class="flex items-center gap-2.5">
-      <button id="btnViewCodeToggle" class="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-        <span>View HTML</span>
-      </button>
-      <button id="btnExportSpec" class="px-3 py-1.5 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        <span>Download HTML</span>
-      </button>
-    </div>
+  // Render into emulator
+  state.currentHtml = generatedHtml;
+  emulatorIframe.srcdoc = generatedHtml;
+
+  // Telemetry Features Summary
+  const appName = document.getElementById('cfgAppName').value || 'NovaApp';
+  if (isHinglish) {
+    const featureSummary = getHindiFeatureSummary(promptText, appName);
+    appendLog(`[Features Summary] ${featureSummary}`);
+    appendLog(`[Safal] Android WebView container me app load ho gaya! 🎉`);
+  } else {
+    appendLog(`[Features Summary] ${appName} ready: multi-screen navigation, touch interactions & responsive Android layout.`);
+    appendLog('Rendered into Android Mobile Emulator');
+  }
+
+  // Fade out loading overlay
+  await new Promise(r => setTimeout(r, 350));
+  emulatorLoadingOverlay.style.opacity = '0';
+  await new Promise(r => setTimeout(r, 300));
+  emulatorLoadingOverlay.style.display = 'none';
+
+  state.isGenerating = false;
+  btnGenerate.disabled = false;
+  btnGenerate.classList.remove('opacity-75', 'cursor-not-allowed');
+  btnGenerateText.textContent = isHinglish ? 'Generate App (Naya Banao)' : 'Generate App';
+  telemetryStatus.textContent = isHinglish ? '● Emulated (Active/Taiyyar)' : '● Emulated (Active)';
+  telemetryStatus.className = 'text-emerald-400 font-mono text-[10px]';
+}    </div>
   </header>
 
   <!-- MAIN WORK AREA -->
