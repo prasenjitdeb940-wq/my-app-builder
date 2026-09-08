@@ -4,76 +4,230 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional AI App Builder</title>
-    <script src="https://jsdelivr.net"></script>
     <style>
-        body { background-color: #0B0F19; color: #F3F4F6; font-family: system-ui, sans-serif; }
-        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background-color: #0B0F19; 
+            color: #F3F4F6; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #60A5FA, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle { color: #9CA3AF; font-size: 13px; margin-top: 4px; margin-bottom: 15px; }
+
+        .card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label { font-size: 12px; font-weight: 600; color: #9CA3AF; display: block; }
+
+        input[type="password"], textarea {
+            width: 100%;
+            background-color: #030712;
+            border: 1px solid #1F2937;
+            border-radius: 10px;
+            color: #F3F4F6;
+            padding: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="password"]:focus, textarea:focus { border-color: #3B82F6; }
+
+        .api-row { display: flex; gap: 8px; }
+        
+        button {
+            background: linear-gradient(to right, #2563EB, #7C3AED);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        
+        button.btn-save { padding: 10px 16px; background: #2563EB; font-size: 13px; }
+
+        #apiKeyStatus { font-size: 11px; color: #F59E0B; }
+
+        #statusLog {
+            background-color: #030712;
+            border: 1px solid #1F2937;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #9CA3AF;
+            min-height: 80px;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Responsive Mobile Emulator View */
+        .emulator-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 360px;
+            height: 580px;
+            background: #000000;
+            border-radius: 36px;
+            border: 8px solid #1F2937;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate-x(-50%);
+            width: 110px;
+            height: 16px;
+            background: #1F2937;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 50;
+        }
+
+        .screen-canvas { width: 100%; height: 100%; background: white; relative: true; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
+
+        .loader-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-center: true;
+            z-index: 40;
+        }
+        .hidden { display: none !important; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #3B82F6;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-overlay p { font-size: 14px; color: white; font-weight: 500; }
+        .loader-overlay span { font-size: 12px; color: #9CA3AF; margin-top: 4px; }
+
+        @media (min-width: 768px) {
+            body { flex-direction: row; padding: 24px; gap: 24px; overflow: hidden; }
+            .container { flex-direction: row; max-width: 1400px; height: 100%; }
+            .left-panel { width: 400px; height: 100%; overflow-y: auto; }
+            .emulator-wrapper { flex-1: true; height: 100%; margin-top: 0; align-items: center; }
+            .phone-frame { height: 700px; }
+            #statusLog { min-height: 150px; max-height: none; flex-grow: 1; }
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+<body>
 
-    <!-- Left Controls Panel -->
-    <div class="w-full md:w-96 glass p-6 flex flex-col gap-6 overflow-y-auto border-r border-gray-800">
-        <div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">AI App Builder</h1>
-            <p class="text-xs text-gray-400 mt-1">Generate professional apps instantly</p>
-        </div>
-
-        <!-- Secure API Key Section -->
-        <div class="p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-            <label class="text-xs font-semibold text-gray-400 block mb-1">🔑 Gemini API Key (Saved Locally)</label>
-            <div class="flex gap-2">
-                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs flex-1 focus:outline-none focus:border-blue-500">
-                <button onclick="saveApiKey()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">Save</button>
+    <div class="container">
+        <!-- Left Side Controls Panel -->
+        <div class="left-panel flex flex-col" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <h1>AI App Builder</h1>
+                <p class="subtitle">Generate professional apps instantly</p>
             </div>
-            <p id="apiKeyStatus" class="text-[10px] text-yellow-500 mt-1">Please enter your API Key to activate the builder.</p>
+
+            <!-- API Setup Card -->
+            <div class="card">
+                <label>🔑 Gemini API Key (Saved Locally)</label>
+                <div class="api-row">
+                    <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+                    <button class="btn-save" onclick="saveApiKey()">Save</button>
+                </div>
+                <div id="apiKeyStatus">Please enter your API Key to activate the builder.</div>
+            </div>
+
+            <!-- Prompt Input Card -->
+            <div class="card">
+                <label>Describe Your App Idea</label>
+                <textarea id="appPrompt" rows="4" placeholder="E.g., Mujhe ek kapde bechne wala app chahiye jisme product catalog ho... (Type in Hindi, Hinglish or English)"></textarea>
+                <button onclick="generateApp()" style="margin-top: 5px;">✨ Generate App</button>
+            </div>
+
+            <!-- Status Logs Card -->
+            <div class="card" style="flex-grow: 1;">
+                <label>System Logs / Status</label>
+                <div id="statusLog">System ready. Waiting for prompt...</div>
+            </div>
         </div>
 
-        <!-- Prompt Input Section -->
-        <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-gray-300">Describe Your App Idea</label>
-            <textarea id="appPrompt" rows="5" placeholder="E.g., Mujhe ek kapde bechne wala app chahiye jisme product catalog ho... (You can type in Hindi, Hinglish or English)" class="w-full bg-gray-950 border border-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500 resize-none"></textarea>
-        </div>
-
-        <button onclick="generateApp()" id="generateBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-blue-500/10 cursor-pointer">
-            ✨ Generate App
-        </button>
-
-        <!-- Status & System Log Summary -->
-        <div class="flex-1 flex flex-col gap-2">
-            <label class="text-xs font-semibold text-gray-400">System Logs / Status</label>
-            <div id="statusLog" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 text-xs font-mono text-gray-400 overflow-y-auto whitespace-pre-wrap">System ready. Waiting for prompt...</div>
-        </div>
-    </div>
-
-    <!-- Right Emulator Preview Screen -->
-    <div class="flex-1 flex items-center justify-center p-4 bg-gray-950">
-        <!-- Phone Frame Mockup -->
-        <div class="relative w-[360px] h-[720px] bg-black rounded-[48px] shadow-2xl border-[12px] border-gray-800 flex flex-col overflow-hidden ring-4 ring-gray-900">
-            <!-- Notch -->
-            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-5 bg-gray-800 rounded-b-2xl z-50"></div>
-            
-            <!-- Live App Render Canvas inside Emulator -->
-            <div class="flex-1 bg-white relative">
-                <iframe id="emulatorFrame" class="w-full h-full border-none bg-white"></iframe>
-                <!-- Loading Overlay -->
-                <div id="emulatorLoading" class="absolute inset-0 bg-gray-900/90 flex flex-col items-center justify-center p-6 text-center hidden z-40">
-                    <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p class="text-sm font-medium text-white">AI is writing code...</p>
-                    <p class="text-xs text-gray-400 mt-1 animate-pulse">Aapka professional app taiyar ho raha hai.</p>
+        <!-- Right Side Mobile Emulator Canvas -->
+        <div class="emulator-wrapper">
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="screen-canvas">
+                    <iframe id="emulatorFrame"></iframe>
+                    
+                    <!-- Loading Block Overlay -->
+                    <div id="emulatorLoading" class="loader-overlay hidden">
+                        <div class="spinner"></div>
+                        <p>AI is writing code...</p>
+                        <span>Aapka professional app taiyar ho raha hai.</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Check and Load Saved API Key on Start
         window.onload = function() {
             const savedKey = localStorage.getItem('user_gemini_key');
             if (savedKey) {
                 document.getElementById('apiKeyInput').value = savedKey;
-                document.getElementById('apiKeyStatus').innerText = "✅ API Key loaded and active!";
-                document.getElementById('apiKeyStatus').className = "text-[10px] text-green-500 mt-1";
+                const status = document.getElementById('apiKeyStatus');
+                status.innerText = "✅ API Key loaded and active!";
+                status.style.color = "#10B981";
             }
         }
 
@@ -81,8 +235,9 @@
             const key = document.getElementById('apiKeyInput').value.trim();
             if(key) {
                 localStorage.setItem('user_gemini_key', key);
-                document.getElementById('apiKeyStatus').innerText = "✅ API Key saved securely!";
-                document.getElementById('apiKeyStatus').className = "text-[10px] text-green-500 mt-1";
+                const status = document.getElementById('apiKeyStatus');
+                status.innerText = "✅ API Key saved securely!";
+                status.style.color = "#10B981";
                 alert("API Key Successfully Saved Locally!");
             } else {
                 alert("Please enter a valid key.");
@@ -97,12 +252,17 @@
             const iframe = document.getElementById('emulatorFrame');
 
             if (!key) {
-                alert("Please save your Gemini API Key in the settings box first!");
+                alert("Please save your Gemini API Key first!");
                 return;
             }
             if (!prompt) {
                 alert("Please write your app idea prompt first!");
                 return;
+            }
+
+            loading.classList.remove('hidden');
+            logBox.innerText = "Connecting to Google Gemini API...\nAnalyzing layout requirements...";
+
             }
 
             // Start Loading Visuals
