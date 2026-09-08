@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web-to-APK App Builder | Prompt-Driven Android Studio</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            surface: {
+              DEFAULT: '#09090b',
+              50: '#18181b',
+              100: '#27272a',
+              200: '#3f3f46',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          },
+          boxShadow: {
+            'phone': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 12px #1e1e24, 0 0 0 14px #2e2e38',
+            'phone-glow': '0 0 50px -10px rgba(99, 102, 241, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Custom sleek scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+    /* Phone glass glare effect */
+    .phone-glass-glare {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 40%, rgba(255, 255, 255, 0) 100%);
+    }
+
+    /* Ambient pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#09090b] text-zinc-100 font-sans h-screen flex flex-col overflow-hidden selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP HEADER NAVIGATION -->
+  <header class="h-14 border-b border-zinc-800 bg-[#0d0d12]/90 backdrop-blur-md px-5 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+        <!-- Android Bot Logo -->
+        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v6c0 .83.67 1.5 1.5 1.5S5 16.33 5 15.5v-6C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5zm-4.97-4.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 2.23 12.95 2 12 2c-.96 0-1.86.23-2.66.63L7.85 1.14c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 4.26 6 6.01 6 8h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-semibold text-sm tracking-tight text-zinc-100">Web-to-APK Builder</h1>
+          <span class="px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">Studio Edition</span>
+        </div>
+        <p class="text-[11px] text-zinc-400">Prompt-Driven Android Mobile Synthesis</p>
+      </div>
+    </div>
+
+    <!-- Center Status Indicator -->
+    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="text-zinc-300 font-medium">Emulator: Android 14 (API 34)</span>
+      <span class="text-zinc-600">|</span>
+      <span class="text-zinc-400 font-mono text-[11px]">WebView 122.0</span>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-2.5">
+      <button id="btnViewCodeToggle" class="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        <span>View HTML</span>
+      </button>
+      <button id="btnExportSpec" class="px-3 py-1.5 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span>Download HTML</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORK AREA -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT SIDEBAR: App Prompt & Build Controls -->
+    <aside class="w-full md:w-[420px] lg:w-[450px] border-r border-zinc-800 bg-[#0d0d12] flex flex-col z-20 shrink-0">
+      
+      <div class="px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-semibold text-zinc-200">App Generator</h2>
+          <p class="text-xs text-zinc-400">Describe your mobile application</p>
+        </div>
+        <span class="px-2 py-0.5 text-[11px] bg-zinc-800 text-zinc-300 rounded font-mono">Prompt Engine</span>
+      </div>
+
+      <!-- Scrollable Configuration -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        
+        <!-- App Prompt Input -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="appPrompt" class="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+              <span>App Idea Prompt</span>
+              <span class="text-indigo-400">*</span>
+            </label>
+            <span class="text-[10px] text-zinc-400 font-mono">Ctrl+Enter to Run</span>
+          </div>
+
+          <div class="relative">
+            <textarea 
+              id="appPrompt" 
+              rows="4" 
+              placeholder="e.g. Make a multi-screen E-commerce app with category tabs, product cards, cart drawer, and checkout modal..."
+              class="w-full bg-[#121217] border border-zinc-800 hover:border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3.5 text-xs text-zinc-200 placeholder-zinc-500 transition resize-none outline-none leading-relaxed"
+            >Make a multi-screen E-commerce app with category filters, shopping cart, and product details</textarea>
+            <div class="absolute bottom-2.5 right-3 text-[10px] text-zinc-400 font-mono" id="charCount">94 chars</div>
+          </div>
+        </div>
+
+        <!-- Quick Idea Presets -->
+        <div class="space-y-2">
+          <span class="text-[11px] font-medium text-zinc-400">Quick Prompt Templates</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="preset-btn px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5" data-prompt="Make a multi-screen E-commerce app with category filters, shopping cart, and product details">
+              <span>🛍️</span>
+              <span>E-commerce Store</span>
+            </button>
+            <button class="preset-btn px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5" data-prompt="Build a modern Fitness Tracker mobile app with daily streak, caloric ring progress, workout list, and active timer">
+              <span>🏋️</span>
+              <span>Fitness Tracker</span>
+            </button>
+            <button class="preset-btn px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5" data-prompt="Create a Food Delivery mobile app with restaurant menus, dish customizer, cart summary, and driver ETA tracker">
+              <span>🍔</span>
+              <span>Food Delivery</span>
+            </button>
+            <button class="preset-btn px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5" data-prompt="Create a modern Crypto Wallet & Swap app with portfolio balance, asset chart, send/receive modals, and transaction history">
+              <span>⚡</span>
+              <span>Crypto Wallet</span>
+            </button>
+            <button class="preset-btn px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5" data-prompt="Make a clean Minimalist Task & Habit organizer with priority tags, calendar schedule, and completion checks">
+              <span>📝</span>
+              <span>Habit & Tasks</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Android Build Settings -->
+        <div class="p-4 bg-[#121217] border border-zinc-800/80 rounded-xl space-y-3.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-zinc-300">Android Build Settings</span>
+            <span class="text-[10px] text-zinc-400 font-mono">Gradle 8.4</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-[11px] text-zinc-400 mb-1">App Name</label>
+              <input type="text" id="cfgAppName" value="NovaStore Mobile" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-200 text-xs focus:border-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] text-zinc-400 mb-1">Package ID</label>
+              <input type="text" id="cfgAppPackage" value="com.craft.novastore" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-400 text-xs font-mono focus:border-indigo-500 outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-[11px] text-zinc-400 mb-1">Accent Theme</label>
+              <select id="cfgThemeColor" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-300 text-xs focus:border-indigo-500 outline-none">
+                <option value="indigo">Indigo / Violet (Default)</option>
+                <option value="emerald">Emerald / Mint</option>
+                <option value="amber">Amber / Gold</option>
+                <option value="rose">Rose / Coral</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-zinc-400 mb-1">Device Frame</label>
+              <select id="cfgDeviceModel" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-300 text-xs focus:border-indigo-500 outline-none">
+                <option value="pixel8">Google Pixel 8 Pro</option>
+                <option value="galaxy">Samsung Galaxy S24</option>
+                <option value="compact">Compact 6.1" Phone</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Log -->
+        <div class="p-3.5 bg-zinc-950/80 border border-zinc-800/80 rounded-xl space-y-2">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-zinc-400 font-medium">Build Telemetry</span>
+            <span id="telemetryStatus" class="text-emerald-400 font-mono text-[10px]">● System Idle</span>
+          </div>
+          <div id="buildLogs" class="font-mono text-[11px] text-zinc-500 space-y-1 h-20 overflow-y-auto pr-1">
+            <div>[00:00] Web2APK AVD daemon ready</div>
+            <div>[00:00] Target SDK: Android 34 (Upside Down Cake)</div>
+            <div>[00:00] Ready to generate application code...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="p-5 border-t border-zinc-800 bg-[#0d0d12]/95 shrink-0 space-y-2">
+        <button 
+          id="btnGenerate" 
+          class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 group"
+        >
+          <svg class="w-4 h-4 text-indigo-200 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+          </svg>
+          <span id="btnGenerateText">Generate App</span>
+        </button>
+        <p class="text-center text-[11px] text-zinc-400">Generates clean HTML5 + CSS + JS packaged for Android WebView</p>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT MAIN AREA: Realistic Android Mobile Emulator -->
+    <main class="flex-1 bg-[#050508] relative flex flex-col items-center justify-center p-4 lg:p-8 overflow-hidden">
+      
+      <!-- Ambient Studio Lighting -->
+      <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div class="w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] animate-pulse-ring"></div>
+        <div class="w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px]"></div>
+      </div>
+
+      <!-- Emulator Top Control Strip -->
+      <div class="z-10 mb-4 flex items-center justify-between w-full max-w-[390px] px-2 text-xs text-zinc-400">
+        <div class="flex items-center gap-2">
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="font-medium text-zinc-300" id="currentDeviceLabel">Google Pixel 8 Pro</span>
+          <span class="text-[11px] text-zinc-400 font-mono">1080 x 2400</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btnReloadEmulator" title="Reload App" class="p-1.5 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ANDROID PHONE EMULATOR CHASSIS -->
+      <div id="emulatorChassis" class="relative z-10 w-[360px] sm:w-[380px] h-[680px] sm:h-[720px] bg-[#121218] rounded-[48px] p-3 shadow-phone shadow-black/80 border border-zinc-700/60 transition-all duration-300">
+        
+        <!-- Hardware Side Buttons -->
+        <div class="absolute -left-[14px] top-24 w-[3px] h-10 bg-zinc-700 rounded-l-sm"></div>
+        <div class="absolute -left-[14px] top-38 w-[3px] h-12 bg-zinc-700 rounded-l-sm"></div>
+        <div class="absolute -right-[14px] top-28 w-[3px] h-14 bg-zinc-700 rounded-r-sm"></div>
+
+        <!-- Phone Inner Bezel & Screen -->
+        <div class="relative w-full h-full bg-black rounded-[40px] overflow-hidden flex flex-col border border-zinc-800/80">
+          
+          <!-- Speaker Slit -->
+          <div class="absolute top-0 inset-x-0 h-7 z-30 flex items-center justify-center pointer-events-none">
+            <div class="w-12 h-1 bg-zinc-800 rounded-full mb-1"></div>
+          </div>
+
+          <!-- Glass Reflection Overlay -->
+          <div class="absolute inset-0 pointer-events-none z-20 phone-glass-glare"></div>
+
+          <!-- Android OS Status Bar -->
+          <div class="h-7 w-full bg-black/90 text-zinc-300 px-6 flex items-center justify-between text-[11px] font-medium select-none z-25 shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span id="emulatorClock" class="font-semibold text-[11px] text-zinc-200">09:41</span>
+            </div>
+            <!-- Center Hole-Punch Camera -->
+            <div class="w-3.5 h-3.5 bg-zinc-950 rounded-full border border-zinc-800 flex items-center justify-center">
+              <div class="w-1.5 h-1.5 bg-[#0f172a] rounded-full"></div>
+            </div>
+            <!-- 5G, Wi-Fi, Battery -->
+            <div class="flex items-center gap-1 text-[10px]">
+              <span class="font-mono text-[9px] text-zinc-400">5G</span>
+              <svg class="w-3 h-3 text-zinc-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98A16.88 16.88 0 0012 4z"/></svg>
+              <span class="text-[9px] font-mono">92%</span>
+            </div>
+          </div>
+
+          <!-- DYNAMIC SCREEN CONTENT / IFRAME -->
+          <div class="relative flex-1 w-full bg-zinc-950 overflow-hidden">
+            
+            <iframe 
+              id="emulatorIframe" 
+              class="w-full h-full border-0 bg-white"
+              sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+              title="Android Mobile Application Preview"
+            ></iframe>
+
+            <!-- HIGH-TECH ANDROID LOADING ANIMATION OVERLAY -->
+            <div id="emulatorLoadingOverlay" class="absolute inset-0 bg-[#09090f] z-30 flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
+              
+              <!-- Orbital Animated Hologram -->
+              <div class="relative w-20 h-20 mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                <div class="absolute inset-2 rounded-full border-2 border-cyan-400/20 border-b-cyan-400 animate-spin" style="animation-direction: reverse; animation-duration: 2s;"></div>
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                  <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v6c0 .83.67 1.5 1.5 1.5S5 16.33 5 15.5v-6C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <h3 class="text-sm font-semibold text-zinc-100 mb-1" id="loadingTitle">Compiling Android Web Bundle</h3>
+              <p class="text-xs text-zinc-400 mb-5 max-w-[240px]" id="loadingSubtitle">Synthesizing DOM architecture & touch intera
