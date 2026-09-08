@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Web-to-APK App Builder | Prompt-Driven Android Studio</title>
   <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -39,9 +39,9 @@
       }
     }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* Custom sleek scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -53,6 +53,16 @@
     .phone-glass-glare {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 40%, rgba(255, 255, 255, 0) 100%);
     }
+
+    /* Ambient pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-zinc-100 font-sans h-screen flex flex-col overflow-hidden selection:bg-indigo-500 selection:text-white">
@@ -61,6 +71,7 @@
   <header class="h-14 border-b border-zinc-800 bg-[#0d0d12]/90 backdrop-blur-md px-5 flex items-center justify-between z-30 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+        <!-- Android Bot Logo -->
         <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v6c0 .83.67 1.5 1.5 1.5S5 16.33 5 15.5v-6C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5zm-4.97-4.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 2.23 12.95 2 12 2c-.96 0-1.86.23-2.66.63L7.85 1.14c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 4.26 6 6.01 6 8h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
         </svg>
@@ -74,35 +85,92 @@
       </div>
     </div>
 
-    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs">
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span class="text-zinc-300 font-medium">Emulator: Android 14 (API 34)</span>
+    <!-- Center Key Storage (Hidden Securely in original Layout) -->
+    <div class="flex items-center gap-2 px-3 py-1 bg-zinc-900/80 border border-zinc-800 rounded-lg text-xs max-w-xs">
+      <input type="password" id="apiKeyInput" placeholder="Enter Gemini API Key..." class="bg-transparent text-zinc-200 outline-none w-36 text-[11px]">
+      <button onclick="saveApiKey()" class="text-indigo-400 font-medium text-[11px] hover:text-indigo-300">Save</button>
     </div>
 
+    <!-- Right Actions -->
     <div class="flex items-center gap-2.5">
-      <button id="btnCopyCode" onclick="copyGeneratedCode()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition flex items-center gap-1.5">
-        <span>Copy Code</span>
+      <button id="btnCopyCode" onclick="copyCode()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        <span>View HTML</span>
+      </button>
+      <button id="btnExportSpec" onclick="downloadCode()" class="px-3 py-1.5 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span>Download HTML</span>
       </button>
     </div>
   </header>
 
   <!-- MAIN WORK AREA -->
-  <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+  <div class="flex-1 flex overflow-hidden">
     
-    <!-- LEFT SIDEBAR -->
-    <aside class="w-full md:w-[420px] border-r border-zinc-800 bg-[#0d0d12] flex flex-col z-20 shrink-0 overflow-y-auto">
-      <div class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+    <!-- LEFT SIDEBAR: App Prompt & Build Controls -->
+    <aside class="w-full md:w-[420px] lg:w-[450px] border-r border-zinc-800 bg-[#0d0d12] flex flex-col z-20 shrink-0">
+      
+      <div class="px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">App Generator</h2>
           <p class="text-xs text-zinc-400">Describe your mobile application</p>
         </div>
+        <span id="keyStatusLabel" class="px-2 py-0.5 text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded font-mono">No Key</span>
       </div>
 
-      <div class="p-6 space-y-5 flex-1 flex flex-col">
-        <!-- Secure API Key Section Inside Original Sidebar Design -->
-        <div class="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl space-y-2">
-          <label class="text-xs font-medium text-zinc-300">🔑 Gemini API Key (Saved Securely)</label>
-          <div class="flex gap-2">
+      <!-- Scrollable Configuration -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        
+        <!-- App Prompt Input -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="appPrompt" class="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+              <span>App Idea Prompt</span>
+              <span class="text-indigo-400">*</span>
+            </label>
+            <span class="text-[10px] text-zinc-400 font-mono">Hindi/English supported</span>
+          </div>
+
+          <div class="relative">
+            <textarea 
+              id="appPrompt" 
+              rows="4" 
+              placeholder="e.g. Mujhe ek kapde bechne wala app chahiye jisme product catalog ho..."
+              class="w-full bg-[#121217] border border-zinc-800 hover:border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3.5 text-xs text-zinc-200 placeholder-zinc-500 transition resize-none outline-none leading-relaxed"
+            >Make a multi-screen E-commerce app with category filters, shopping cart, and product details</textarea>
+          </div>
+        </div>
+
+        <!-- Quick Idea Presets -->
+        <div class="space-y-2">
+          <span class="text-[11px] font-medium text-zinc-400">Quick Prompt Templates</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="setPreset('🛍️ E-commerce Store app')" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5">
+              <span>🛍️</span><span>E-commerce Store</span>
+            </button>
+            <button onclick="setPreset('🏃 Fitness Tracker App with diet tracking')" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 rounded-lg text-xs transition flex items-center gap-1.5">
+              <span>🏃</span><span>Fitness Tracker</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Android Build Settings Layout -->
+        <div class="pt-2 border-t border-zinc-800/60 space-y-3">
+          <div class="flex items-center justify-between"><span class="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Android Build Settings</span><span class="text-[10px] font-mono text-zinc-500">Gradle 8.2</span></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1"><label class="text-[11px] text-zinc-400">App Name</label><input type="text" value="Teraform Mobile" class="w-full bg-[#121217] border border-zinc-800 rounded-lg p-2 text-xs text-zinc-300 outline-none" disabled></div>
+            <div class="space-y-1"><label class="text-[11px] text-zinc-400">Package ID</label><input type="text" value="com.prompt.appbuilder" class="w-full bg-[#121217] border border-zinc-800 rounded-lg p-2 text-xs text-zinc-300 outline-none" disabled></div>
+          </div>
+        </div>
+
+        <!-- Compile Trigger Button -->
+        <button onclick="generateApp()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl transition shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer">
+          <span>🚀 Generate App</span>
+        </button>
+
+        <!-- System Logs Dashboard -->
+        <div class="space-y-2 pt-2 flex-1 flex flex-col">
+          <label class="text-xs font-medium text-zinc-400">System Logs / Status</label>
             <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="bg-[#121217] border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg p-2 text-xs text-zinc-200 flex-1 outline-none">
             <button onclick="saveApiKey()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition cursor-pointer">Save</button>
           </div>
